@@ -6,7 +6,6 @@ import { toast } from "react-toastify";
 import { setTokens } from "../services/localStorage.service";
 
 const httpAuth = axios.create();
-
 const AuthContext = React.createContext();
 export const useAuth = () => {
     return useContext(AuthContext);
