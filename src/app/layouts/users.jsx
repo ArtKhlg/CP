@@ -5,8 +5,7 @@ import UserPage from "../components/page/userPage";
 import UsersListPage from "../components/page/usersListPage";
 import UserProvider from "../hooks/useUsers";
 const Users = () => {
-    const params = useParams();
-    const { userId, edit } = params;
+    const { userId, edit } = useParams();
     return (
         <>
             <UserProvider>

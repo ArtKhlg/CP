@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { validator } from "../../utils/validator";
 import TextField from "../common/form/textField";
 import CheckBoxField from "../common/form/checkBoxField";
-import { useLogIn } from "../../hooks/useLogin";
 import { useHistory } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 const LoginForm = () => {
     const history = useHistory();
@@ -12,7 +12,7 @@ const LoginForm = () => {
         password: "",
         stayOn: false
     });
-    const { signIn } = useLogIn();
+    const { signIn } = useAuth();
     const [errors, setErrors] = useState({});
     const handleChange = (target) => {
         setData((prevState) => ({
@@ -62,7 +62,11 @@ const LoginForm = () => {
         console.log(data);
         try {
             await signIn(data);
-            history.push("/");
+            history.push(
+                history.location.state.from.pathname
+                    ? history.location.state.from.pathname
+                    : "/"
+            );
         } catch (error) {
             setErrors(error);
         }
