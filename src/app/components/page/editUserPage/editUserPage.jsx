@@ -56,6 +56,7 @@ const EditUserPage = () => {
         qualities: currentUser.qualities
     });
     const qualitiesArray = getQualities(data.qualities);
+    console.log(data.qualities);
     const handleSubmit = (e) => {
         e.preventDefault();
         const newData = {
