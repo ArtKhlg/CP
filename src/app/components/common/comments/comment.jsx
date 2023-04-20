@@ -11,8 +11,8 @@ const Comment = ({
     onRemove
 }) => {
     const { getUserById } = useUser();
-    const user = getUserById(userId);
     const { currentUser } = useAuth();
+    const user = getUserById(userId);
 
     return (
         <div className="bg-light card-body  mb-3">

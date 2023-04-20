@@ -36,7 +36,6 @@ const AddCommentForm = ({ onSubmit }) => {
         onSubmit(data);
         clearForm();
     };
-
     return (
         <div>
             <h2>New comment</h2>

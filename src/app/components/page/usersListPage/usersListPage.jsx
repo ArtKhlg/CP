@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { paginate } from "../../../utils/paginate";
 import Pagination from "../../common/pagination";
@@ -7,12 +7,18 @@ import SearchStatus from "../../ui/searchStatus";
 import UserTable from "../../ui/usersTable";
 import _ from "lodash";
 import { useUser } from "../../../hooks/useUsers";
-import { useProfessions } from "../../../hooks/useProfession";
+// import { useProfessions } from "../../../hooks/useProfession";
 import { useAuth } from "../../../hooks/useAuth";
+import { useSelector } from "react-redux";
+import {
+    getProfessions,
+    getProfessionsLoadingStatus
+} from "../../../store/professions";
 const UsersListPage = () => {
-    const { currentUser } = useAuth();
     const { users } = useUser();
-    const { isLoading: professionLoading, professions } = useProfessions();
+    const { currentUser } = useAuth();
+    const professions = useSelector(getProfessions());
+    const professionsLoading = useSelector(getProfessionsLoadingStatus());
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedProf, setSelectedProf] = useState();
@@ -33,6 +39,7 @@ const UsersListPage = () => {
         // setUsers(newArray);
         console.log(newArray);
     };
+
     useEffect(() => {
         setCurrentPage(1);
     }, [selectedProf, searchQuery]);
@@ -63,11 +70,12 @@ const UsersListPage = () => {
                               .indexOf(searchQuery.toLowerCase()) !== -1
                   )
                 : selectedProf
-                ? data.filter(
-                      (user) =>
+                ? data.filter((user) => {
+                      return (
                           JSON.stringify(user.profession) ===
-                          JSON.stringify(selectedProf)
-                  )
+                          JSON.stringify(selectedProf._id)
+                      );
+                  })
                 : data;
             return filteredUsers.filter((u) => u._id !== currentUser._id);
         }
@@ -85,7 +93,7 @@ const UsersListPage = () => {
 
         return (
             <div className="d-flex">
-                {professions && !professionLoading && (
+                {professions && !professionsLoading && (
                     <div className="d-flex flex-column flex-shrink-0 p-3">
                         <GroupList
                             selectedItem={selectedProf}

@@ -1,10 +1,10 @@
 import React, { useContext, useEffect, useState } from "react";
 import PropTypes from "prop-types";
+import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
 import { useAuth } from "./useAuth";
 import { nanoid } from "nanoid";
 import commentService from "../services/comment.service";
-import { toast } from "react-toastify";
 
 const CommentsContext = React.createContext();
 
@@ -13,8 +13,8 @@ export const useComments = () => {
 };
 
 export const CommentsProvider = ({ children }) => {
-    const { currentUser } = useAuth();
     const { userId } = useParams();
+    const { currentUser } = useAuth();
     const [isLoading, setLoading] = useState(true);
     const [comments, setComments] = useState([]);
     const [error, setError] = useState(null);
@@ -37,18 +37,20 @@ export const CommentsProvider = ({ children }) => {
         }
         console.log(comment);
     }
-    useEffect(() => {
-        if (error !== null) {
-            toast(error);
-            setError(null);
+    async function getComments() {
+        try {
+            const { content } = await commentService.getComments(userId);
+            setComments(content);
+        } catch (error) {
+            errorCatcher(error);
+        } finally {
+            setLoading(false);
         }
-    }, [error]);
-
+    }
     function errorCatcher(error) {
         const { message } = error.response.data;
         setError(message);
     }
-
     async function removeComment(id) {
         try {
             const { content } = await commentService.removeComment(id);
@@ -61,17 +63,12 @@ export const CommentsProvider = ({ children }) => {
             errorCatcher(error);
         }
     }
-
-    async function getComments() {
-        try {
-            const { content } = await commentService.getComments(userId);
-            setComments(content);
-        } catch (error) {
-            errorCatcher(error);
-        } finally {
-            setLoading(false);
+    useEffect(() => {
+        if (error !== null) {
+            toast(error);
+            setError(null);
         }
-    }
+    }, [error]);
     return (
         <CommentsContext.Provider
             value={{ comments, createComment, isLoading, removeComment }}

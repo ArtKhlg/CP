@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useHistory } from "react-router-dom";
 import { validator } from "../../../utils/validator";
 import TextField from "../../common/form/textField";
 import SelectField from "../../common/form/selectField";
@@ -6,69 +7,79 @@ import RadioField from "../../common/form/radioField";
 import MultiSelectField from "../../common/form/multiSelectField";
 import BackHistoryButton from "../../common/backButton";
 import { useAuth } from "../../../hooks/useAuth";
-import { useQualities } from "../../../hooks/useQualities";
-import { useProfessions } from "../../../hooks/useProfession";
-import { useHistory, useParams } from "react-router-dom";
+// import { useProfessions } from "../../../hooks/useProfession";
+import { useSelector } from "react-redux";
+import {
+    getQualities,
+    getQualitiesLoadingStatus
+} from "../../../store/qualities";
+import {
+    getProfessions,
+    getProfessionsLoadingStatus
+} from "../../../store/professions";
 
 const EditUserPage = () => {
-    const { userId } = useParams();
     const history = useHistory();
-    console.log("history", history);
-    const { currentUser, updateUser } = useAuth();
-    const openLink = () => {
-        if (currentUser._id !== userId) {
-            history.push(`/users/${currentUser._id}/edit`);
-        }
-    };
-    const [isLoading, setIsLoading] = useState(false);
-    const { qualities } = useQualities();
+    const [isLoading, setIsLoading] = useState(true);
+    const [data, setData] = useState();
+    const { currentUser, updateUserData } = useAuth();
+    const qualities = useSelector(getQualities());
+    const qualitiesLoading = useSelector(getQualitiesLoadingStatus());
     const qualitiesList = qualities.map((q) => ({
         label: q.name,
         value: q._id
     }));
-    const { professions } = useProfessions();
+    // const { professions, isLoading: professionLoading } = useProfessions();
+    const professions = useSelector(getProfessions());
+    const professionLoading = useSelector(getProfessionsLoadingStatus());
     const professionsList = professions.map((p) => ({
         label: p.name,
         value: p._id
     }));
     const [errors, setErrors] = useState({});
 
-    const getQualities = (elements) => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const isValid = validate();
+        if (!isValid) return;
+        await updateUserData({
+            ...data,
+            qualities: data.qualities.map((q) => q.value)
+        });
+
+        history.push(`/users/${currentUser._id}`);
+    };
+    function getQualitiesListByIds(qualitiesIds) {
         const qualitiesArray = [];
-        for (const elem of elements) {
-            for (const quality in qualities) {
-                if (elem === qualities[quality]._id) {
-                    qualitiesArray.push({
-                        value: qualities[quality]._id,
-                        label: qualities[quality].name
-                    });
+        for (const qualId of qualitiesIds) {
+            for (const quality of qualities) {
+                if (quality._id === qualId) {
+                    qualitiesArray.push(quality);
+                    break;
                 }
             }
         }
         return qualitiesArray;
-    };
-
-    const [data, setData] = useState({
-        name: currentUser.name,
-        email: currentUser.email,
-        profession: currentUser.profession,
-        sex: currentUser.sex,
-        qualities: currentUser.qualities
-    });
-    const qualitiesArray = getQualities(data.qualities);
-    console.log(data.qualities);
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const newData = {
-            ...currentUser,
-            ...data,
-            qualities: data.qualities.map((q) => q.value)
-        };
-        updateUser(newData);
-        history.push(`/users/${newData._id}`);
+    }
+    const transformData = (data) => {
+        const result = getQualitiesListByIds(data).map((qual) => ({
+            label: qual.name,
+            value: qual._id
+        }));
+        return result;
     };
     useEffect(() => {
-        if (data._id) setIsLoading(false);
+        if (!professionLoading && !qualitiesLoading && currentUser && !data) {
+            setData({
+                ...currentUser,
+                qualities: transformData(currentUser.qualities)
+            });
+        }
+    }, [professionLoading, qualitiesLoading, currentUser, data]);
+    useEffect(() => {
+        if (data && isLoading) {
+            setIsLoading(false);
+        }
     }, [data]);
 
     const validatorConfig = {
@@ -89,30 +100,24 @@ const EditUserPage = () => {
     useEffect(() => {
         validate();
     }, [data]);
-
     const handleChange = (target) => {
         setData((prevState) => ({
             ...prevState,
             [target.name]: target.value
         }));
     };
-
     const validate = () => {
         const errors = validator(data, validatorConfig);
         setErrors(errors);
         return Object.keys(errors).length === 0;
     };
     const isValid = Object.keys(errors).length === 0;
-
-    useEffect(() => {
-        openLink();
-    }, []);
     return (
         <div className="container mt-5">
             <BackHistoryButton />
             <div className="row">
                 <div className="col-md-6 offset-md-3 shadow p-4">
-                    {!isLoading && currentUser ? (
+                    {!isLoading && Object.keys(professions).length > 0 ? (
                         <form onSubmit={handleSubmit}>
                             <TextField
                                 label="Имя"
@@ -149,7 +154,7 @@ const EditUserPage = () => {
                                 label="Выберите ваш пол"
                             />
                             <MultiSelectField
-                                defaultValue={qualitiesArray}
+                                defaultValue={data.qualities}
                                 options={qualitiesList}
                                 onChange={handleChange}
                                 name="qualities"

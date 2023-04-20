@@ -30,7 +30,7 @@ const NavBar = () => {
                         <NavProfile />
                     ) : (
                         <Link
-                            className="nav-link"
+                            className="nav-link "
                             aria-current="page"
                             to="/login"
                         >
