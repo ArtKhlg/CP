@@ -13,14 +13,13 @@ const Comment = ({
 }) => {
     const currentUserId = useSelector(getCurrentUserId());
     const user = useSelector(getUserById(userId));
-    console.log("user", user);
     return (
         <div className="bg-light card-body  mb-3">
             <div className="row">
                 <div className="col">
                     <div className="d-flex flex-start ">
                         <img
-                            src={user?.image}
+                            src={user.image}
                             className="rounded-circle shadow-1-strong me-3"
                             alt="avatar"
                             width="65"
